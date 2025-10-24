@@ -1,0 +1,25 @@
+# Python virtual environment
+env/
+venv/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs
+*.log
+
+# VS Code settings
+.vscode/
+
+# Database
+*.sqlite3
+
+# Pydantic cache / other temp files
+*.cache
+
+# OS files
+.DS_Store
+Thumbs.db
