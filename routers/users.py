@@ -1,5 +1,6 @@
 import logging
 from core import models, schemas, database
+from core.auth import (hash_password, verify_password)
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -13,7 +14,12 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
     try:
         if db.query(models.User).filter(models.User.username == user.username).first():
             raise HTTPException(status_code=400, detail="Username already registered")
-        new_user = models.User(username=user.username, password=user.password, role=models.UserRole(user.role.value), email=user.email, contact_number=user.contact_number)
+        if len(user.password.encode('utf-8')) > 72:
+            logging.warning("Password longer than 72 bytes; truncating for bcrypt")
+
+
+        hashed_password = hash_password(user.password)
+        new_user = models.User(username=user.username, password=hashed_password, role=models.UserRole(user.role.value), email=user.email, contact_number=user.contact_number)
         db.add(new_user)
         db.commit()
         logging.info("User committed successfully")
@@ -34,10 +40,11 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
 @router.post("/login/", response_model=schemas.UserOut, status_code=200)
 def login_user(user: schemas.UserLogin, db: Session = Depends(database.get_db)):
     try:
-        db_user = db.query(models.User).filter(models.User.email == user.email,
-                                              models.User.password == user.password).first()
+        db_user = db.query(models.User).filter(models.User.email == user.email).first()
         if not db_user:
-            raise HTTPException(status_code=400, detail="Invalid email or password")
+            raise HTTPException(status_code=400, detail="Invalid email")
+        if not verify_password(user.password, db_user.password):
+            raise HTTPException(status_code=400, detail="Invalid password")
         return {
                 "id": db_user.id,
                 "username": db_user.username,
