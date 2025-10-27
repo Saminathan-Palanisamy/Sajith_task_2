@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers import users
+from routers import users, template_check, section_check
 from core.database import Base, engine
 
 Base.metadata.create_all(bind=engine)
@@ -8,6 +8,8 @@ app = FastAPI(title="Sajith task_2_project API - JWT Authentication [24-10-2025]
 
 # Including user router
 app.include_router(users.router, prefix="/users", tags=["Users"])
+app.include_router(template_check.router, prefix="/templates", tags=["Templates"])
+app.include_router(section_check.router, prefix="/sections", tags=["Sections"])
 
 @app.get("/")
 def root():
