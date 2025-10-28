@@ -1,7 +1,8 @@
 from core.models import UserRole
 import enum
 from pydantic import BaseModel, EmailStr
-from typing import Optional, Any
+from typing import Optional, Any, Union
+
 
 #-------user schema roles enum
 class UserRole(enum.Enum):
@@ -70,11 +71,20 @@ class TemplateData(BaseModel):
 class TemplateRead(BaseModel):
     status: str
     message: str
-    data: TemplateData
+    data: Optional[TemplateData]= None
 
     model_config = {
         "from_attributes": True
     }
+
+class TemplateUpdate(BaseModel):
+    Temp_name: Optional[str]
+    Temp_desc: Optional[str]
+    created_by: Optional[int]
+    model_config = {
+        "from_attributes": True
+    }
+
 
 #-------section schema models
 class SectionCreate(BaseModel):
@@ -95,8 +105,38 @@ class SectionData(BaseModel):
 class SectionRead(BaseModel):
     status: str
     message: str
-    data: SectionData
+    data: Optional[SectionData]= None
 
     model_config = {
         "from_attributes": True
+    }
+
+class SectionUpdate(BaseModel):
+    section_name: Optional[str]
+    section_desc: Optional[str]
+    template_id: Optional[int]
+    order: Optional[int]
+
+    model_config = {
+        "from_attributes": True
+    }
+
+#-----update schema for unified template and sections
+class UnifiedUpdateRequest(BaseModel):
+    temp_id: Optional[int] = None
+    section_id: Optional[int] = None
+
+    # Template fields
+    Temp_name: Optional[str] = None
+    Temp_desc: Optional[str] = None
+    created_by: Optional[int] = None
+
+    # Section fields
+    section_name: Optional[str] = None
+    section_desc: Optional[str] = None
+    template_id: Optional[int] = None
+    order: Optional[int] = None
+
+    model_config = {
+        "from_attributes":True
     }

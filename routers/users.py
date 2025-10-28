@@ -2,10 +2,12 @@ import logging
 from core import models, schemas, database
 from core.auth import (hash_password, verify_password, create_access_token, decode_access_token)
 from core.schemas import (UserCreate, UserLogin, UserRead, LoginResponse, UserOut, Token_Data)
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from core import dependencies
 from sqlalchemy.orm import Session
 from datetime import timedelta
+from fastapi.responses import JSONResponse
+
 router = APIRouter()
 get_db = database.get_db
 
@@ -29,12 +31,15 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
         db.refresh(new_user)
         logging.info("User refreshed successfully")
 
-        return {
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content={
                 "id": new_user.id,
                 "username": new_user.username,
                 "email": new_user.email,
                 "role": new_user.role.value
                }
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
         
@@ -53,20 +58,16 @@ def login_user(user: schemas.UserLogin, db: Session = Depends(database.get_db)):
         access_token = create_access_token(
             data={"sub": db_user.email, "role": db_user.role.value}, expires_delta=access_token_expies
         )
-        return {
-                "user": {
-                    "id": db_user.id,
-                    "username": db_user.username,
-                    "email": db_user.email,
-                    "role": db_user.role.value
-                         },
-                "token": {
-                    "access_token": access_token,
-                    "token_type": "bearer"
-                         },
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "username": db_user.username,
+                "access_token": access_token,
                 "status": "success",
                 "message": "Successful ah login panitinga, vaalthukal!"
-                }
+            }
+                
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
