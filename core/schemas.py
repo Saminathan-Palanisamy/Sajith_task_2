@@ -81,12 +81,14 @@ class SectionCreate(BaseModel):
     section_name: str
     section_desc: str
     template_id: int
+    order: int
 
 class SectionData(BaseModel):
     section_id: int
     section_name: str
     section_desc: str
     template_id: int
+    order: int
 
     model_config = {"from_attributes": True}
 

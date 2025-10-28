@@ -4,6 +4,8 @@ from core.database import Base, engine
 
 Base.metadata.create_all(bind=engine)
 
+
+
 app = FastAPI(title="Sajith task_2_project API - JWT Authentication [24-10-2025]")
 
 # Including user router

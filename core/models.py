@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum, UniqueConstraint
 from core.database import Base
 
 class UserRole(enum.Enum):
@@ -32,9 +32,13 @@ class Template(Base):
 class Section(Base):
     __tablename__ = "sections"
 
-
     section_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     section_name = Column(String, unique=True, index=True, nullable=False)
     section_desc = Column(Text, nullable=False)
     template_id = Column(Integer, ForeignKey("templates.temp_id"), nullable=False)
+    order = Column(Integer, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint('template_id', 'order', name='unique_template_order'),
+    )
 
