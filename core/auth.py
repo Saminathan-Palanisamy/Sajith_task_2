@@ -1,8 +1,15 @@
 # core/auth.py
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
+from fastapi.security import HTTPBearer
+from sqlalchemy.orm import Session
+from core import database, models
+
+
+#--JWT Oauth2_scheme router
+oauth2_scheme = HTTPBearer()
 #---------------------------------------------------------------------
 
 # Password hashing context
@@ -48,4 +55,19 @@ def decode_access_token(token: str) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
         )
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(database.get_db)
+):
+    payload = decode_access_token(token.credentials)
+    email: str = payload.get("sub")
+    if email is None:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
 #---------------------------------------------------------------------

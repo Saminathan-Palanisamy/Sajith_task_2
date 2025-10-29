@@ -2,13 +2,14 @@ from core import schemas, models, database
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from core.auth import get_current_user
 
 router = APIRouter()
 get_db = database.get_db
 
 #---create details to section check
 @router.post("/fill_the_section", response_model=schemas.SectionRead)
-def create_section(section: schemas.SectionCreate, db: Session = Depends(database.get_db)):
+def create_section(section: schemas.SectionCreate, db: Session = Depends(database.get_db),current_user: models.User = Depends(get_current_user)):
     try:
         existing_order=db.query(models.Section).filter(models.Section.template_id==section.template_id, models.Section.order==section.order).first()
         if existing_order:
@@ -50,7 +51,7 @@ def create_section(section: schemas.SectionCreate, db: Session = Depends(databas
 
 # update section details
 @router.put("/update_section/{section_id}", response_model=schemas.SectionRead)
-def update_section(section_id: int, section: schemas.SectionUpdate, db: Session = Depends(database.get_db)):
+def update_section(section_id: int, section: schemas.SectionUpdate, db: Session = Depends(database.get_db),current_user: models.User = Depends(get_current_user)):
     try:
         db_section = db.query(models.Section).filter(models.Section.section_id == section_id).first()
         if not db_section:

@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from routers import users, template_check, section_check, update_temp_sec
 from core.database import Base, engine
 

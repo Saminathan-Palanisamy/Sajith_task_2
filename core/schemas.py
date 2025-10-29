@@ -29,6 +29,10 @@ class UserRead(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    model_config = {
+        "from_attributes": True 
+    }
+
 
 class UserOut(BaseModel):
     id: int
@@ -125,3 +129,7 @@ class SectionUpdate(BaseModel):
 class UpdateDetails(BaseModel):
     name: str
     desc: str
+
+
+
+#-- Maintain Authentication for user sessions.

@@ -5,12 +5,13 @@ from core import database
 from routers import template_check, section_check
 from core import models,schemas
 from core.schemas import UpdateDetails
+from core.auth import get_current_user
 
 router = APIRouter()
 get_db = database.get_db
 
 @router.put("/update_details")
-def update_template_or_section(temp_id: int = None, section_id: int = None, details: UpdateDetails = None, db: Session = Depends(database.get_db)):
+def update_template_or_section(temp_id: int = None, section_id: int = None, details: UpdateDetails = None, db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
     """
     Update either template or section based on the given ID.
     - If template_id is provided -> update template name & desc

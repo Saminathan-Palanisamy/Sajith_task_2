@@ -1,6 +1,8 @@
 import enum
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum, UniqueConstraint, Boolean, DateTime
 from core.database import Base
+from sqlalchemy.orm import relationship
+
 
 class UserRole(enum.Enum):
     ADMIN = "admin"
@@ -17,6 +19,9 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     contact_number = Column(String, unique=True, index=True, nullable=False)
+
+    sessions = relationship("Authenticator", back_populates="user")
+
 
 
 #---new template model
@@ -42,3 +47,17 @@ class Section(Base):
         UniqueConstraint('template_id', 'order', name='unique_template_order'),
     )
 
+# Authenticator table for user's tracking
+class Authenticator(Base):
+    __tablename__ = "authentication"
+
+    authenticator_id=Column(Integer,primary_key=True, index= True, autoincrement= True)
+    User_id= Column(Integer,ForeignKey("users.id"),nullable=False)
+    Token = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
+    Login_time = Column(DateTime)
+    Logout_time = Column(DateTime)
+    Session_duration = Column(Integer)
+
+    user=relationship("User", back_populates="sessions")
+    

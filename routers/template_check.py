@@ -2,7 +2,7 @@ from core import schemas, models, database
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
-
+from core.auth import get_current_user
 
 
 router = APIRouter()
@@ -11,7 +11,7 @@ get_db = database.get_db
 
 #---create details to template check
 @router.post("/fill", response_model=schemas.TemplateRead)
-def create_template(template: schemas.TemplateCreate, db: Session = Depends(database.get_db)):
+def create_template(template: schemas.TemplateCreate, db: Session = Depends(database.get_db),current_user: models.User = Depends(get_current_user)):
     try:
         db_template = db.query(models.Template).filter(models.Template.Temp_name == template.Temp_name).first()
         if db_template:
@@ -48,7 +48,7 @@ def create_template(template: schemas.TemplateCreate, db: Session = Depends(data
 
 # update template details
 @router.put("/update/{temp_id}", response_model=schemas.TemplateRead)
-def update_template(temp_id: int, template: schemas.TemplateUpdate, db: Session = Depends(database.get_db)):
+def update_template(temp_id: int, template: schemas.TemplateUpdate, db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
     try:
         db_template = db.query(models.Template).filter(models.Template.temp_id == temp_id).first()
         if not db_template:

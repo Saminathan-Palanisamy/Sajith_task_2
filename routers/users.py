@@ -3,10 +3,13 @@ from core import models, schemas, database
 from core.auth import (hash_password, verify_password, create_access_token, decode_access_token)
 from core.schemas import (UserCreate, UserLogin, UserRead, LoginResponse, UserOut, Token_Data)
 from fastapi import APIRouter, Depends, HTTPException, status
-from core import dependencies
+from core import auth
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordRequestForm
+
+
 
 router = APIRouter()
 get_db = database.get_db
@@ -46,12 +49,12 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
 
 #----login user
 @router.post("/login", response_model=schemas.LoginResponse)
-def login_user(user: schemas.UserLogin, db: Session = Depends(database.get_db)):
+def login_user(form_data: schemas.UserLogin = Depends(), db: Session = Depends(database.get_db)):
     try:
-        db_user = db.query(models.User).filter(models.User.email == user.email).first()
+        db_user = db.query(models.User).filter(models.User.email == form_data.email).first()
         if not db_user:
             raise HTTPException(status_code=400, detail="Invalid email")
-        if not verify_password(user.password, db_user.password):
+        if not verify_password(form_data.password, db_user.password):
             raise HTTPException(status_code=400, detail="Invalid password")
 
         access_token_expies = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -61,10 +64,11 @@ def login_user(user: schemas.UserLogin, db: Session = Depends(database.get_db)):
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
-                "username": db_user.username,
+                "email": db_user.email,
                 "access_token": access_token,
+                "token_type": "bearer",
                 "status": "success",
-                "message": "Successful ah login panitinga, vaalthukal!"
+                "message": f"Welcome {db_user.username}, login successful!"
             }
                 
         )
@@ -73,7 +77,7 @@ def login_user(user: schemas.UserLogin, db: Session = Depends(database.get_db)):
 
 #----logout user
 @router.post("/logout", response_model=schemas.Token_Data)
-def logout_user(current_user: dict = Depends(dependencies.get_current_user)):
+def logout_user(current_user: dict = Depends(auth.get_current_user)):
     try:
         # Invalidate the user's token (implementation depends on your auth strategy)
         return {
