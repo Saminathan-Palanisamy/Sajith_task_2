@@ -121,22 +121,7 @@ class SectionUpdate(BaseModel):
         "from_attributes": True
     }
 
-#-----update schema for unified template and sections
-class UnifiedUpdateRequest(BaseModel):
-    temp_id: Optional[int] = None
-    section_id: Optional[int] = None
-
-    # Template fields
-    Temp_name: Optional[str] = None
-    Temp_desc: Optional[str] = None
-    created_by: Optional[int] = None
-
-    # Section fields
-    section_name: Optional[str] = None
-    section_desc: Optional[str] = None
-    template_id: Optional[int] = None
-    order: Optional[int] = None
-
-    model_config = {
-        "from_attributes":True
-    }
+# --- Pydantic schema for update input
+class UpdateDetails(BaseModel):
+    name: str
+    desc: str
