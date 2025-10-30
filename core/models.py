@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum, UniqueConstraint, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum, UniqueConstraint, Boolean, DateTime, text
 from core.database import Base
 from sqlalchemy.orm import relationship
 
@@ -54,7 +54,7 @@ class Authenticator(Base):
     authenticator_id=Column(Integer,primary_key=True, index= True, autoincrement= True)
     User_id= Column(Integer,ForeignKey("users.id"),nullable=False)
     Token = Column(String, nullable=False)
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True, server_default=text('true'))
     Login_time = Column(DateTime)
     Logout_time = Column(DateTime)
     Session_duration = Column(Integer)
