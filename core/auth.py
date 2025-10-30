@@ -3,10 +3,10 @@ from fastapi import HTTPException, status, Depends
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from fastapi.security import HTTPBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import database, models
-
+from fastapi.responses import JSONResponse
 
 #--JWT Oauth2_scheme router
 oauth2_scheme = HTTPBearer()
@@ -28,7 +28,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # JWT Secret and Algorithm
 SECRET_KEY = "BeingGood"  
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 50  
+ACCESS_TOKEN_EXPIRE_MINUTES =  1
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Create a JWT token"""
@@ -56,18 +56,32 @@ def decode_access_token(token: str) -> dict:
             detail="Invalid token"
         )
 
-def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(database.get_db)
-):
-    payload = decode_access_token(token.credentials)
-    email: str = payload.get("sub")
-    if email is None:
-        raise HTTPException(status_code=401, detail="Invalid token payload")
-
-    user = db.query(models.User).filter(models.User.email == email).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+def get_current_user(token: HTTPAuthorizationCredentials = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
+    try:
+        payload = decode_access_token(token.credentials)
+        email = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        user = db.query(models.User).filter(models.User.email == email).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return {"user": user, "token": token.credentials}
+    except HTTPException as e:
+        if "expired" in e.detail.lower():
+            # mark session as inactive if token expired
+            db.query(models.Authenticator).filter(models.Authenticator.Token == token.credentials).update({
+                models.Authenticator.is_active: False,
+                models.Authenticator.Logout_time: datetime.utcnow()
+            })
+            db.commit()
+            # return JSONResponse(
+            #     status_code=status.HTTP_200_OK,
+            #     content={
+            #         "message":"Access token Time limit expired.",
+            #         "Session_duration":ACCESS_TOKEN_EXPIRE_MINUTES
+                    
+            #     }
+            # )
+        raise e
 
 #---------------------------------------------------------------------
