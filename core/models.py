@@ -32,6 +32,7 @@ class Template(Base):
     Temp_name = Column(String, unique=True, index=True, nullable=False)
     Temp_desc = Column(Text, nullable=False)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    is_active = Column(Boolean, default=True)
 
 #---new section model
 class Section(Base):
@@ -42,6 +43,7 @@ class Section(Base):
     section_desc = Column(Text, nullable=False)
     template_id = Column(Integer, ForeignKey("templates.temp_id"), nullable=False)
     order = Column(Integer, nullable=True)
+    is_active = Column(Boolean, default=True)
 
     __table_args__ = (
         UniqueConstraint('template_id', 'order', name='unique_template_order'),

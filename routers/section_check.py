@@ -105,22 +105,22 @@ def reorder_sections(
         if not reorder_data:
             raise HTTPException(status_code=400, detail="No data provided")
 
-        # ✅ Step 1: Basic duplicate ID check
+        #  Step 1: Basic duplicate ID check
         section_ids = [item.section_id for item in reorder_data]
         if len(section_ids) != len(set(section_ids)):
             raise HTTPException(status_code=400, detail="Duplicate section_id in input")
 
-        # ✅ Step 2: Fetch all target sections
+        #  Step 2: Fetch all target sections
         sections = db.query(models.Section).filter(models.Section.section_id.in_(section_ids)).all()
         if len(sections) != len(reorder_data):
             existing_ids = [s.section_id for s in sections]
             missing = list(set(section_ids) - set(existing_ids))
             raise HTTPException(status_code=404, detail=f"Sections not found: {missing}")
 
-        # ✅ Step 3: Build mapping {section_id: new_order}
+        #  Step 3: Build mapping {section_id: new_order}
         new_order_map = {item.section_id: item.new_order for item in reorder_data}
 
-        # ✅ Step 4: Group validation - check duplicates within same template
+        #  Step 4: Group validation - check duplicates within same template
         grouped = {}
         for s in sections:
             grouped.setdefault(s.template_id, []).append(new_order_map[s.section_id])
@@ -146,17 +146,17 @@ def reorder_sections(
                            f"Allowed orders: {sorted(existing_orders)} Enter the order numbers that are already exists against the template id"
                 )
 
-        # ✅ Step 5: Temporarily clear orders to bypass unique constraint
+        #  Step 5: Temporarily clear orders to bypass unique constraint
         for s in sections:
             s.order = None
         db.flush()
 
-        # ✅ Step 6: Apply final new orders
+        #  Step 6: Apply final new orders
         for s in sections:
             s.order = new_order_map[s.section_id]
         db.commit()
 
-        # ✅ Step 7: Return success
+        #  Step 7: Return success
         return {
             "status": "success",
             "message": "Sections reordered successfully",
