@@ -105,41 +105,58 @@ def reorder_sections(
         if not reorder_data:
             raise HTTPException(status_code=400, detail="No data provided")
 
+        # ✅ Step 1: Basic duplicate ID check
         section_ids = [item.section_id for item in reorder_data]
         if len(section_ids) != len(set(section_ids)):
             raise HTTPException(status_code=400, detail="Duplicate section_id in input")
 
-        # Fetch all target sections
+        # ✅ Step 2: Fetch all target sections
         sections = db.query(models.Section).filter(models.Section.section_id.in_(section_ids)).all()
         if len(sections) != len(reorder_data):
             existing_ids = [s.section_id for s in sections]
             missing = list(set(section_ids) - set(existing_ids))
             raise HTTPException(status_code=404, detail=f"Sections not found: {missing}")
 
-        # Map section_id -> new_order
+        # ✅ Step 3: Build mapping {section_id: new_order}
         new_order_map = {item.section_id: item.new_order for item in reorder_data}
 
-        # Group validation: duplicates within same template_id
+        # ✅ Step 4: Group validation - check duplicates within same template
         grouped = {}
         for s in sections:
             grouped.setdefault(s.template_id, []).append(new_order_map[s.section_id])
+
         for template_id, new_orders in grouped.items():
+            # (a) Check duplicate new orders within template
             if len(new_orders) != len(set(new_orders)):
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Duplicate order values within template_id {template_id}"
+                    detail=f"Duplicate new order values found within template_id {template_id}"
                 )
 
-        # --- STEP 1: Temporarily clear 'order' to bypass unique constraint ---
+            # (b) Check if provided orders are valid ones from existing order list
+            existing_orders = [
+                s.order for s in sections if s.template_id == template_id
+            ]
+
+            invalid_orders = [o for o in new_orders if o not in existing_orders]
+            if invalid_orders:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid new order(s) {invalid_orders} for template_id {template_id}. "
+                           f"Allowed orders: {sorted(existing_orders)} Enter the order numbers that are already exists against the template id"
+                )
+
+        # ✅ Step 5: Temporarily clear orders to bypass unique constraint
         for s in sections:
             s.order = None
         db.flush()
 
-        # --- STEP 2: Apply final new orders ---
+        # ✅ Step 6: Apply final new orders
         for s in sections:
             s.order = new_order_map[s.section_id]
         db.commit()
 
+        # ✅ Step 7: Return success
         return {
             "status": "success",
             "message": "Sections reordered successfully",
