@@ -93,3 +93,65 @@ def update_section(section_id: int, section: schemas.SectionUpdate, db: Session 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+#-- rearranging order
+@router.put("/reorder_sections")
+def reorder_sections(
+    reorder_data: list[schemas.SectionReorderItem],
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    try:
+        if not reorder_data:
+            raise HTTPException(status_code=400, detail="No data provided")
+
+        section_ids = [item.section_id for item in reorder_data]
+        if len(section_ids) != len(set(section_ids)):
+            raise HTTPException(status_code=400, detail="Duplicate section_id in input")
+
+        # Fetch all target sections
+        sections = db.query(models.Section).filter(models.Section.section_id.in_(section_ids)).all()
+        if len(sections) != len(reorder_data):
+            existing_ids = [s.section_id for s in sections]
+            missing = list(set(section_ids) - set(existing_ids))
+            raise HTTPException(status_code=404, detail=f"Sections not found: {missing}")
+
+        # Map section_id -> new_order
+        new_order_map = {item.section_id: item.new_order for item in reorder_data}
+
+        # Group validation: duplicates within same template_id
+        grouped = {}
+        for s in sections:
+            grouped.setdefault(s.template_id, []).append(new_order_map[s.section_id])
+        for template_id, new_orders in grouped.items():
+            if len(new_orders) != len(set(new_orders)):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Duplicate order values within template_id {template_id}"
+                )
+
+        # --- STEP 1: Temporarily clear 'order' to bypass unique constraint ---
+        for s in sections:
+            s.order = None
+        db.flush()
+
+        # --- STEP 2: Apply final new orders ---
+        for s in sections:
+            s.order = new_order_map[s.section_id]
+        db.commit()
+
+        return {
+            "status": "success",
+            "message": "Sections reordered successfully",
+            "data": [
+                {"section_id": s.section_id, "template_id": s.template_id, "order": s.order}
+                for s in sections
+            ]
+        }
+
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))

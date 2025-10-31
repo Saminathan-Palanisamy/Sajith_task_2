@@ -11,12 +11,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
 
 
-
-
 router = APIRouter()
 get_db = database.get_db
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 1
+ACCESS_TOKEN_EXPIRE_MINUTES = 10
 
 # Create User
 @router.post("/register", response_model=schemas.UserOut)
@@ -29,7 +27,12 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
 
 
         hashed_password = hash_password(user.password)
-        new_user = models.User(username=user.username, password=hashed_password, role=models.UserRole(user.role.value), email=user.email, contact_number=user.contact_number)
+        new_user = models.User(
+            username=user.username, 
+            password=hashed_password, 
+            role=models.UserRole(user.role.value), 
+            email=user.email, 
+            contact_number=user.contact_number)
         db.add(new_user)
         db.commit()
         logging.info("User committed successfully")
@@ -145,6 +148,7 @@ def logout_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred during logout or Logout failed: {str(e)}"
         )
+    
 
 # #----get user by id
 # @router.get("/{user_id}/", response_model=schemas.UserRead, status_code=200)

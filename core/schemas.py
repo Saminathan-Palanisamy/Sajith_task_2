@@ -130,6 +130,13 @@ class UpdateDetails(BaseModel):
     name: str
     desc: str
 
+#---------------------------------------
 
+#-- rearranging orders in sections
+class SectionReorderItem(BaseModel):
+    section_id: int
+    new_order: int
 
-#-- Maintain Authentication for user sessions.
+class SectionReorderRequest(BaseModel):
+    sections: list[SectionReorderItem]
+#----------------------------------------
