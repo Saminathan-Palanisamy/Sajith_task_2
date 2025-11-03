@@ -1,4 +1,5 @@
 from core import schemas, models, database
+from core.role_based import (admin_required, user_required)
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -8,7 +9,7 @@ router = APIRouter()
 get_db = database.get_db
 
 #---create details to section check
-@router.post("/fill_the_section", response_model=schemas.SectionRead)
+@router.post("/fill_the_section", response_model=schemas.SectionRead, dependencies=[Depends(admin_required)])
 def create_section(section: schemas.SectionCreate, db: Session = Depends(database.get_db),current_user: models.User = Depends(get_current_user)):
     try:
         existing_order=db.query(models.Section).filter(models.Section.template_id==section.template_id, models.Section.order==section.order).first()
@@ -50,7 +51,7 @@ def create_section(section: schemas.SectionCreate, db: Session = Depends(databas
 #-------------------------------------------------------------------------------
 
 # update section details
-@router.put("/update_section/{section_id}", response_model=schemas.SectionRead)
+@router.put("/update_section/{section_id}", response_model=schemas.SectionRead, dependencies=[Depends(admin_required)])
 def update_section(section_id: int, section: schemas.SectionUpdate, db: Session = Depends(database.get_db),current_user: models.User = Depends(get_current_user)):
     try:
         db_section = db.query(models.Section).filter(models.Section.section_id == section_id).first()
@@ -95,7 +96,7 @@ def update_section(section_id: int, section: schemas.SectionUpdate, db: Session 
 
 
 #-- rearranging order
-@router.put("/reorder_sections")
+@router.put("/reorder_sections", dependencies=[Depends(admin_required)])
 def reorder_sections(
     reorder_data: list[schemas.SectionReorderItem],
     db: Session = Depends(database.get_db),

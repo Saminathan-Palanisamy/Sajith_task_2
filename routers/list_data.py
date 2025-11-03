@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from core import database, models, schemas
 from core.auth import get_current_user
+from core.role_based import admin_or_user_required
 
 router = APIRouter()
 get_db = database.get_db
@@ -11,7 +12,7 @@ get_db = database.get_db
 # -------------------------------------------------------------
 # Role-based list API
 # -------------------------------------------------------------
-@router.get("/list_items")
+@router.get("/list_items", dependencies=[Depends(admin_or_user_required)])
 def list_templates_or_sections(
     temp_id: int = None,
     template: bool = False,

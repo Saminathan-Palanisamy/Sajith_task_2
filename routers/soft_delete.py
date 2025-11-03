@@ -3,11 +3,12 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from core import database, models
 from core.auth import get_current_user
+from core.role_based import (admin_required,user_required)
 
 router = APIRouter()
 get_db = database.get_db
 
-@router.put("/soft_delete")
+@router.put("/soft_delete", dependencies=[Depends(admin_required)])
 def soft_delete_template_or_section(
     temp_id: int = None,
     section_id: int = None,
