@@ -115,15 +115,15 @@ class SectionRead(BaseModel):
         "from_attributes": True
     }
 
-class SectionUpdate(BaseModel):
-    section_name: Optional[str]
-    section_desc: Optional[str]
-    template_id: Optional[int]
-    order: Optional[int]
+# class SectionUpdate(BaseModel):
+#     section_name: Optional[str]
+#     section_desc: Optional[str]
+#     template_id: Optional[int]
+#     order: Optional[int]
 
-    model_config = {
-        "from_attributes": True
-    }
+#     model_config = {
+#         "from_attributes": True
+#     }
 
 # --- Pydantic schema for update input
 class UpdateDetails(BaseModel):

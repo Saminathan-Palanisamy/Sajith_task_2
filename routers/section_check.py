@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from core import schemas, models, database
 from core.role_based import (admin_required, user_required)
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -16,6 +17,9 @@ def create_section(section: schemas.SectionCreate, db: Session = Depends(databas
         if existing_order:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Order number {section.order} already exists for template ID {section.template_id}.")
         
+        max_order=db.query(func.max(models.Section.order)).filter(models.Section.template_id==section.template_id).scalar()
+        next_order = (max_order or 0) + 1
+
         existing_section_name=db.query(models.Section).filter(models.Section.section_name==section.section_name).first()
         if existing_section_name:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Section name already exists")
@@ -23,7 +27,7 @@ def create_section(section: schemas.SectionCreate, db: Session = Depends(databas
             section_name=section.section_name,
             section_desc=section.section_desc,
             template_id=section.template_id,
-            order=section.order
+            order=next_order
         )
         db.add(new_section)
         db.commit()
@@ -50,49 +54,79 @@ def create_section(section: schemas.SectionCreate, db: Session = Depends(databas
         raise HTTPException(status_code=500, detail=str(e))
 #-------------------------------------------------------------------------------
 
-# update section details
-@router.put("/update_section/{section_id}", response_model=schemas.SectionRead, dependencies=[Depends(admin_required)])
-def update_section(section_id: int, section: schemas.SectionUpdate, db: Session = Depends(database.get_db),current_user: models.User = Depends(get_current_user)):
+@router.put("/update_section_details", dependencies=[Depends(admin_required)])
+def update_section_details(
+    section_id: int,
+    details: schemas.UpdateDetails,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Update section name and description by section_id.
+    - Keeps the same order and template_id.
+    - Validates unique section name under same template.
+    """
     try:
-        db_section = db.query(models.Section).filter(models.Section.section_id == section_id).first()
-        if not db_section:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Section not found")
+        #  Validate section_id
+        section = db.query(models.Section).filter(models.Section.section_id == section_id).first()
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
 
-        existing_order=db.query(models.Section).filter(models.Section.template_id==section.template_id, models.Section.order==section.order, models.Section.section_id!=section_id).first()
-        if existing_order:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Order number {section.order} already exists for template ID {section.template_id}.")
+        #  Validate details input
+        if not details or (not details.name and not details.desc):
+            raise HTTPException(
+                status_code=400,
+                detail="At least one field (name or desc) is required to update."
+            )
 
-        existing_section_name=db.query(models.Section).filter(models.Section.section_name==section.section_name, models.Section.section_id!=section_id).first()
-        if existing_section_name:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Section name already exists")
+        name = details.name.strip() if details.name else None
+        desc = details.desc.strip() if details.desc else None
 
-        db_section.section_name = section.section_name
-        db_section.section_desc = section.section_desc
-        db_section.template_id = section.template_id
-        db_section.order = section.order
+        #  If name provided, check for duplicates under same template
+        if name and name != section.section_name:
+            existing_name = (
+                db.query(models.Section)
+                .filter(models.Section.section_name == name)
+                .filter(models.Section.template_id == section.template_id)
+                .filter(models.Section.section_id != section_id)
+                .first()
+            )
+            if existing_name:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Section name '{name}' already exists under this template."
+                )
+            section.section_name = name
 
+        #  Update description (if provided)
+        if desc:
+            section.section_desc = desc
+
+        #  Keep order and template_id unchanged
         db.commit()
-        db.refresh(db_section)
-
-        response_section = {
-            "section_id": db_section.section_id,
-            "section_name": db_section.section_name,
-            "section_desc": db_section.section_desc,
-            "template_id": db_section.template_id,
-            "order": db_section.order
-        }
+        db.refresh(section)
 
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
+            status_code=200,
             content={
                 "status": "success",
-                "message": "Section updated successfully",
-                "data": response_section
+                "message": f"Section ID {section_id} updated successfully",
+                "data": {
+                    "section_id": section.section_id,
+                    "section_name": section.section_name,
+                    "section_desc": section.section_desc,
+                    "template_id": section.template_id,
+                    "order": section.order
+                }
             }
         )
 
+    except HTTPException as e:
+        raise e
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 #-- rearranging order
@@ -170,6 +204,51 @@ def reorder_sections(
     except HTTPException:
         db.rollback()
         raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+#-- delete section with reordering according to the last section order. Once deleted, the order against the template id will be rearranged.
+@router.delete("/delete_section/{section_id}", dependencies=[Depends(admin_required)])
+def delete_section(section_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
+    try:
+        #  Step 1: Find section to delete
+        section_to_delete = db.query(models.Section).filter(models.Section.section_id == section_id).first()
+        if not section_to_delete:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Section not found")
+
+        template_id = section_to_delete.template_id
+        deleted_order = section_to_delete.order
+
+        #  Step 2: Delete the section
+        db.delete(section_to_delete)
+        db.commit()
+
+        #  Step 3: Shift remaining sections' order numbers down by 1
+        remaining_sections = (
+            db.query(models.Section)
+            .filter(models.Section.template_id == template_id)
+            .filter(models.Section.order > deleted_order)
+            .order_by(models.Section.order.asc())
+            .all()
+        )
+
+        for section in remaining_sections:
+            section.order -= 1
+        db.commit()
+
+        # Step 4: Return success response
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "status": "success",
+                "message": f"Section ID {section_id} deleted successfully and order adjusted.",
+            },
+        )
+
+    except HTTPException as e:
+        raise e
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))

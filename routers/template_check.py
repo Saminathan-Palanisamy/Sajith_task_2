@@ -46,37 +46,61 @@ def create_template(template: schemas.TemplateCreate, db: Session = Depends(data
         raise HTTPException(status_code=500, detail=str(e))
     
 #-------------------------------------------------------------------------------
-
-# update template details
-@router.put("/update/{temp_id}", response_model=schemas.TemplateRead, dependencies=[Depends(admin_required)])
-def update_template(temp_id: int, template: schemas.TemplateUpdate, db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
+@router.put("/update_template_details", dependencies=[Depends(admin_required)])
+def update_template_details(
+    temp_id: int,
+    details: schemas.UpdateDetails,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Update template name and description by template ID.
+    Uses common schema: UpdateDetails (name, desc)
+    """
     try:
+        #  Fetch template by ID
         db_template = db.query(models.Template).filter(models.Template.temp_id == temp_id).first()
         if not db_template:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
+            raise HTTPException(status_code=404, detail="Template not found")
 
-        db_template.Temp_name = template.Temp_name
-        db_template.Temp_desc = template.Temp_desc
-        db_template.created_by = template.created_by
+        #  Validate name uniqueness (ignore current template)
+        existing_name = (
+            db.query(models.Template)
+            .filter(models.Template.Temp_name == details.name)
+            .filter(models.Template.temp_id != temp_id)
+            .first()
+        )
+        if existing_name:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Template name '{details.name}' already exists."
+            )
 
+        #  Apply updates
+        db_template.Temp_name = details.name.strip() 
+        db_template.Temp_desc = details.desc.strip() 
+
+        #  Commit and refresh
         db.commit()
         db.refresh(db_template)
 
-        response_template = {
-            "temp_id": db_template.temp_id,
-            "Temp_name": db_template.Temp_name,
-            "Temp_desc": db_template.Temp_desc,
-            "created_by": db_template.created_by
-        }
-
+        #  Response
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
                 "status": "success",
-                "message": "Template updated successfully",
-                "data": response_template
+                "message": f"Template ID {temp_id} updated successfully",
+                "data": {
+                    "temp_id": db_template.temp_id,
+                    "Temp_name": db_template.Temp_name,
+                    "Temp_desc": db_template.Temp_desc,
+                    "created_by": db_template.created_by
+                }
             }
         )
 
+    except HTTPException as e:
+        raise e
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
