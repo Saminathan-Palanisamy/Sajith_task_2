@@ -1,5 +1,6 @@
 import enum
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum, UniqueConstraint, Boolean, DateTime, text
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum, UniqueConstraint, Boolean, DateTime, text, JSON
+from datetime import datetime
 from core.database import Base
 from sqlalchemy.orm import relationship
 
@@ -21,6 +22,7 @@ class User(Base):
     contact_number = Column(String, unique=True, index=True, nullable=False)
 
     sessions = relationship("Authenticator", back_populates="user")
+    documents = relationship("Document", back_populates="user")
 
 
 
@@ -33,6 +35,8 @@ class Template(Base):
     Temp_desc = Column(Text, nullable=False)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
     is_active = Column(Boolean, default=True)
+
+    documents = relationship("Document", back_populates="template")
 
 #---new section model
 class Section(Base):
@@ -63,3 +67,20 @@ class Authenticator(Base):
 
     user=relationship("User", back_populates="sessions")
     
+
+# creating table for documents
+class Document(Base):
+    __tablename__ = "documents"
+
+    document_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    template_id = Column(Integer, ForeignKey("templates.temp_id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    file_name = Column(String, nullable=False)            # original filename (not required unique)
+    file_path = Column(String, nullable=False)            # stored relative path
+    uploaded_at = Column(DateTime(timezone=True), server_default=text('CURRENT_TIMESTAMP'))
+    parsed_content = Column(JSON, nullable=True)          # store parsed JSON
+    markdown_content = Column(Text, nullable=True)        # store markdown text
+    is_active = Column(Boolean, default=True, server_default=text('true'))
+
+    user = relationship("User", back_populates="documents")
+    template = relationship("Template", back_populates="documents")

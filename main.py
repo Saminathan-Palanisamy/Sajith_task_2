@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends
-from routers import users, template_check, section_check, update_temp_sec,soft_delete, list_data
+from routers import documents, users, template_check, section_check, update_temp_sec,soft_delete, list_data
 from core.database import Base, engine
 
 Base.metadata.create_all(bind=engine)
@@ -15,6 +15,7 @@ app.include_router(section_check.router, prefix="/sections", tags=["Sections"])
 app.include_router(update_temp_sec.router, prefix="/update", tags=["Updated Data"])
 app.include_router(soft_delete.router, prefix="/soft_delete", tags=["Soft_Delete"])
 app.include_router(list_data.router, prefix="/list", tags=["List_Data"])
+app.include_router(documents.router, prefix="/documents", tags=["Documents"])
 
 @app.get("/")
 def root():

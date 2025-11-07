@@ -1,7 +1,8 @@
 from core.models import UserRole
 import enum
 from pydantic import BaseModel, EmailStr
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, List
+from datetime import datetime
 
 
 #-------user schema roles enum
@@ -140,3 +141,29 @@ class SectionReorderItem(BaseModel):
 class SectionReorderRequest(BaseModel):
     sections: list[SectionReorderItem]
 #----------------------------------------
+
+
+#Document upload schemas
+class DocumentBase(BaseModel):
+    template_id: Optional[int] = None
+    user_id: Optional[int] = None
+    file_name: Optional[str] = None
+    file_path: Optional[str] = None
+    uploaded_at: Optional[datetime] = None
+    parsed_content: Optional[Any] = None
+    markdown_content: Optional[str] = None
+    is_active: Optional[bool] = True
+
+
+class DocumentResponse(DocumentBase):
+    document_id: int
+
+    model_config = {
+        "from_attributes": True  # for Pydantic v2
+    }
+
+
+class MultipleUploadResponse(BaseModel):
+    status: str
+    message: str
+    uploaded_files: List[DocumentResponse]
