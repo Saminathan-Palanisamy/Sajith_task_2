@@ -1,0 +1,872 @@
+{
+    "paragraphs": [
+        {
+            "text": "UPDATE NAME STANDARD OPERATING",
+            "style": "H1"
+        },
+        {
+            "text": "PROCEDURE (SOP)",
+            "style": "H1"
+        },
+        {
+            "text": "SOP#:",
+            "style": "H2"
+        },
+        {
+            "text": "AAA.BBB.CCC.DDD.EE",
+            "style": "H2"
+        },
+        {
+            "text": "Issued Date:",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via DocuSign]",
+            "style": "Normal"
+        },
+        {
+            "text": "Last Review Date:",
+            "style": "Normal"
+        },
+        {
+            "text": "MM/DD/YYYY",
+            "style": "Normal"
+        },
+        {
+            "text": "Effective Date:",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via DocuSign]",
+            "style": "Normal"
+        },
+        {
+            "text": "Next Review Date:",
+            "style": "Normal"
+        },
+        {
+            "text": "MM/DD/YYYY",
+            "style": "Normal"
+        },
+        {
+            "text": "AUTHOR",
+            "style": "H2"
+        },
+        {
+            "text": "Name:",
+            "style": "Normal"
+        },
+        {
+            "text": "Standard O. Inmarian",
+            "style": "Normal"
+        },
+        {
+            "text": "Title:",
+            "style": "Normal"
+        },
+        {
+            "text": "Director, Administration Management",
+            "style": "Normal"
+        },
+        {
+            "text": "Department:",
+            "style": "Normal"
+        },
+        {
+            "text": "update",
+            "style": "Normal"
+        },
+        {
+            "text": "Signature:",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via DocuSign]",
+            "style": "Normal"
+        },
+        {
+            "text": "APPROVALS",
+            "style": "H2"
+        },
+        {
+            "text": "Functional Area",
+            "style": "Normal"
+        },
+        {
+            "text": "Approver Name/Title",
+            "style": "Normal"
+        },
+        {
+            "text": "Signature",
+            "style": "Normal"
+        },
+        {
+            "text": "Date",
+            "style": "Normal"
+        },
+        {
+            "text": "Information",
+            "style": "Normal"
+        },
+        {
+            "text": "Security",
+            "style": "Normal"
+        },
+        {
+            "text": "David Tennyson, VP, Chief",
+            "style": "Normal"
+        },
+        {
+            "text": "Information Security Officer",
+            "style": "Normal"
+        },
+        {
+            "text": "(CISO) and Chief Privacy",
+            "style": "Normal"
+        },
+        {
+            "text": "Officer (CPO)",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via DocuSign]",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via DocuSign]",
+            "style": "Normal"
+        },
+        {
+            "text": "Inmar Corporate",
+            "style": "Normal"
+        },
+        {
+            "text": "Engineering and",
+            "style": "Normal"
+        },
+        {
+            "text": "Shared Services",
+            "style": "Normal"
+        },
+        {
+            "text": "Rick Hanzelin, Chief",
+            "style": "Normal"
+        },
+        {
+            "text": "Information Officer (CIO)",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via DocuSign]",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via DocuSign]",
+            "style": "Normal"
+        },
+        {
+            "text": "​",
+            "style": "Normal"
+        },
+        {
+            "text": "Confidential",
+            "style": "Normal"
+        },
+        {
+            "text": "1 of 5",
+            "style": "Normal"
+        },
+        {
+            "text": "SOP#:",
+            "style": "Normal"
+        },
+        {
+            "text": "AAA.BBB.CCC.DDD.EE",
+            "style": "H2"
+        },
+        {
+            "text": "SOP NAME",
+            "style": "H2"
+        },
+        {
+            "text": "Issued Date:",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via Docusign]",
+            "style": "Normal"
+        },
+        {
+            "text": "Effective Date:",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via Docusign]",
+            "style": "Normal"
+        },
+        {
+            "text": "​",
+            "style": "H3"
+        },
+        {
+            "text": "TABLE OF CONTENTS",
+            "style": "H2"
+        },
+        {
+            "text": "Purpose​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Content for Purpose​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Scope​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Content for Scope​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Responsibilities​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Content for Responsibilities​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Definitions​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Content for Definitions​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Procedure​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Content for Procedure​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Compliance​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Compliance Measurement​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Non-compliance​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Sanctions​",
+            "style": "H3"
+        },
+        {
+            "text": "3",
+            "style": "H3"
+        },
+        {
+            "text": "Exceptions​",
+            "style": "H3"
+        },
+        {
+            "text": "4",
+            "style": "H3"
+        },
+        {
+            "text": "Related Policies, Standards, and Processes​",
+            "style": "H3"
+        },
+        {
+            "text": "4",
+            "style": "H3"
+        },
+        {
+            "text": "Attachments​",
+            "style": "H3"
+        },
+        {
+            "text": "4",
+            "style": "H3"
+        },
+        {
+            "text": "Content for Attachments​",
+            "style": "H3"
+        },
+        {
+            "text": "4",
+            "style": "H3"
+        },
+        {
+            "text": "Revision History​",
+            "style": "H3"
+        },
+        {
+            "text": "5",
+            "style": "H3"
+        },
+        {
+            "text": "​",
+            "style": "Normal"
+        },
+        {
+            "text": "Confidential",
+            "style": "Normal"
+        },
+        {
+            "text": "2 of 5",
+            "style": "Normal"
+        },
+        {
+            "text": "SOP#:",
+            "style": "Normal"
+        },
+        {
+            "text": "AAA.BBB.CCC.DDD.EE",
+            "style": "H2"
+        },
+        {
+            "text": "SOP NAME",
+            "style": "H2"
+        },
+        {
+            "text": "Issued Date:",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via Docusign]",
+            "style": "Normal"
+        },
+        {
+            "text": "Effective Date:",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via Docusign]",
+            "style": "Normal"
+        },
+        {
+            "text": "​",
+            "style": "H3"
+        },
+        {
+            "text": "1.0​ Purpose",
+            "style": "H2"
+        },
+        {
+            "text": "1.1​",
+            "style": "H3"
+        },
+        {
+            "text": "This document establishes the procedure for XYZ at Inmar, Inc. and its wholly and",
+            "style": "H3"
+        },
+        {
+            "text": "partially owned subsidiaries (collectively referred to as “Inmar”).",
+            "style": "H3"
+        },
+        {
+            "text": "2.0​ Scope",
+            "style": "H2"
+        },
+        {
+            "text": "2.1​",
+            "style": "H3"
+        },
+        {
+            "text": "This standard operating procedure (SOP) applies to XYZ.",
+            "style": "H3"
+        },
+        {
+            "text": "3.0​ Responsibilities",
+            "style": "H2"
+        },
+        {
+            "text": "3.1​",
+            "style": "H3"
+        },
+        {
+            "text": "Content for Responsibilities",
+            "style": "H3"
+        },
+        {
+            "text": "4.0​ Definitions",
+            "style": "H2"
+        },
+        {
+            "text": "4.1​",
+            "style": "H3"
+        },
+        {
+            "text": "Content for Definitions",
+            "style": "H3"
+        },
+        {
+            "text": "5.0​ Procedure",
+            "style": "H2"
+        },
+        {
+            "text": "5.1​",
+            "style": "H3"
+        },
+        {
+            "text": "Content for Procedure",
+            "style": "H3"
+        },
+        {
+            "text": "6.0​ Compliance",
+            "style": "H2"
+        },
+        {
+            "text": "6.1​",
+            "style": "H3"
+        },
+        {
+            "text": "SOP review cadence",
+            "style": "H3"
+        },
+        {
+            "text": "6.1.1​ This SOP shall be reviewed biennially.",
+            "style": "H3"
+        },
+        {
+            "text": "6.1.2​ This SOP shall also be reviewed upon significant changes to Inmar’s business,",
+            "style": "H3"
+        },
+        {
+            "text": "regulatory, and/or technical environment that could impact the content of this",
+            "style": "H3"
+        },
+        {
+            "text": "document.",
+            "style": "H3"
+        },
+        {
+            "text": "6.2​",
+            "style": "H3"
+        },
+        {
+            "text": "Compliance Measurement",
+            "style": "H3"
+        },
+        {
+            "text": "6.2.1​ The Information Security Governance, Risk, and Compliance team will verify",
+            "style": "H3"
+        },
+        {
+            "text": "compliance to this SOP through various methods, including but not limited to,",
+            "style": "H3"
+        },
+        {
+            "text": "business tool reports, internal and external audits, and feedback to the author.",
+            "style": "H3"
+        },
+        {
+            "text": "6.3​",
+            "style": "H3"
+        },
+        {
+            "text": "Sanctions",
+            "style": "H3"
+        },
+        {
+            "text": "6.3.1​ Inmar’s sanction policy applies appropriate sanctions, up to and including",
+            "style": "H3"
+        },
+        {
+            "text": "termination, against Inmar team members who fail to comply with Inmar’s",
+            "style": "H3"
+        },
+        {
+            "text": "Information Security Policies and Procedures. Sanctions occur with appropriate",
+            "style": "H3"
+        },
+        {
+            "text": "involvement of Inmar’s human resources and legal departments.",
+            "style": "H3"
+        },
+        {
+            "text": "​",
+            "style": "Normal"
+        },
+        {
+            "text": "Confidential",
+            "style": "Normal"
+        },
+        {
+            "text": "3 of 5",
+            "style": "Normal"
+        },
+        {
+            "text": "SOP#:",
+            "style": "Normal"
+        },
+        {
+            "text": "AAA.BBB.CCC.DDD.EE",
+            "style": "H2"
+        },
+        {
+            "text": "SOP NAME",
+            "style": "H2"
+        },
+        {
+            "text": "Issued Date:",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via Docusign]",
+            "style": "Normal"
+        },
+        {
+            "text": "Effective Date:",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via Docusign]",
+            "style": "Normal"
+        },
+        {
+            "text": "​",
+            "style": "H3"
+        },
+        {
+            "text": "6.3.2​ Inmar team members must comply with all applicable Information Security Policies",
+            "style": "H3"
+        },
+        {
+            "text": "and Procedures in order to ensure the confidentiality, integrity, and availability of",
+            "style": "H3"
+        },
+        {
+            "text": "data in its information systems.",
+            "style": "H3"
+        },
+        {
+            "text": "6.3.3​ Inmar provides annual security awareness training to team members on their",
+            "style": "H3"
+        },
+        {
+            "text": "Information Security Policies and Procedures.",
+            "style": "H3"
+        },
+        {
+            "text": "6.3.4​ Inmar prefers that team members self-report any inadvertent violations of Inmar’s",
+            "style": "H3"
+        },
+        {
+            "text": "Policies and Procedures. A self-report will result in counseling by the Privacy",
+            "style": "H3"
+        },
+        {
+            "text": "Officer or its legal parent’s human resources or legal department. Repeated",
+            "style": "H3"
+        },
+        {
+            "text": "inadvertent violations may result in disciplinary action up to and including",
+            "style": "H3"
+        },
+        {
+            "text": "termination.",
+            "style": "H3"
+        },
+        {
+            "text": "7.0​ Related Policies, Standards, and Processes",
+            "style": "H2"
+        },
+        {
+            "text": "7.1​",
+            "style": "H3"
+        },
+        {
+            "text": "Content for related Policies, Standards, and Processes",
+            "style": "H3"
+        },
+        {
+            "text": "8.0​ Attachments",
+            "style": "H2"
+        },
+        {
+            "text": "8.1​",
+            "style": "H3"
+        },
+        {
+            "text": "Content for Attachments",
+            "style": "H3"
+        },
+        {
+            "text": "​",
+            "style": "Normal"
+        },
+        {
+            "text": "Confidential",
+            "style": "Normal"
+        },
+        {
+            "text": "4 of 5",
+            "style": "Normal"
+        },
+        {
+            "text": "SOP#:",
+            "style": "Normal"
+        },
+        {
+            "text": "AAA.BBB.CCC.DDD.EE",
+            "style": "H2"
+        },
+        {
+            "text": "SOP NAME",
+            "style": "H2"
+        },
+        {
+            "text": "Issued Date:",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via Docusign]",
+            "style": "Normal"
+        },
+        {
+            "text": "Effective Date:",
+            "style": "Normal"
+        },
+        {
+            "text": "[Via Docusign]",
+            "style": "Normal"
+        },
+        {
+            "text": "​",
+            "style": "H3"
+        },
+        {
+            "text": "9.0​ Revision History",
+            "style": "H2"
+        },
+        {
+            "text": "Revised Date",
+            "style": "Normal"
+        },
+        {
+            "text": "Revised By",
+            "style": "Normal"
+        },
+        {
+            "text": "Revision Summary",
+            "style": "Normal"
+        },
+        {
+            "text": "Version Number",
+            "style": "Normal"
+        },
+        {
+            "text": "MM/DD/YYYY",
+            "style": "H3"
+        },
+        {
+            "text": "John D. Inmarian",
+            "style": "H3"
+        },
+        {
+            "text": "Initial Release",
+            "style": "H3"
+        },
+        {
+            "text": "AAA.BBB.CCC.DDD.EE",
+            "style": "H3"
+        },
+        {
+            "text": "​",
+            "style": "Normal"
+        },
+        {
+            "text": "Confidential",
+            "style": "Normal"
+        },
+        {
+            "text": "5 of 5",
+            "style": "Normal"
+        }
+    ],
+    "tables": [
+        {
+            "TableName": "Table_1",
+            "Rows": [
+                [
+                    "Issued Date: [Via DocuSign]"
+                ],
+                [
+                    "Effective Date: [Via DocuSign]"
+                ]
+            ]
+        },
+        {
+            "TableName": "Table_2",
+            "Rows": [
+                [
+                    "Functional Area",
+                    "Approver Name/Title",
+                    "Signature",
+                    "Date"
+                ],
+                [
+                    "",
+                    "David Tennyson, VP, Chief\nInformation Security Officer\n(CISO) and Chief Privacy\nOfficer (CPO)",
+                    "[Via DocuSign]",
+                    ""
+                ],
+                [
+                    "",
+                    "Rick Hanzelin, Chief\nInformation Officer (CIO)",
+                    "[Via DocuSign]",
+                    ""
+                ]
+            ]
+        },
+        {
+            "TableName": "Table_3",
+            "Rows": [
+                [
+                    "David Tennyson, VP, Chief"
+                ],
+                [
+                    "Information Security Officer"
+                ],
+                [
+                    "(CISO) and Chief Privacy"
+                ],
+                [
+                    "Officer (CPO)"
+                ]
+            ]
+        },
+        {
+            "TableName": "Table_4",
+            "Rows": [
+                [
+                    "Information"
+                ],
+                [
+                    "Security"
+                ]
+            ]
+        },
+        {
+            "TableName": "Table_5",
+            "Rows": [
+                [
+                    "Inmar Corporate"
+                ],
+                [
+                    "Engineering and"
+                ],
+                [
+                    "Shared Services"
+                ]
+            ]
+        },
+        {
+            "TableName": "Table_6",
+            "Rows": [
+                [
+                    "Rick Hanzelin, Chief"
+                ],
+                [
+                    "Information Officer (CIO)"
+                ]
+            ]
+        },
+        {
+            "TableName": "Table_7",
+            "Rows": [
+                [
+                    "Revised Date",
+                    "Revised By",
+                    "Revision Summary",
+                    "Version Number"
+                ],
+                [
+                    "",
+                    "John D. Inmarian",
+                    "Initial Release",
+                    ""
+                ],
+                [
+                    "",
+                    "",
+                    "",
+                    ""
+                ],
+                [
+                    "",
+                    "",
+                    "",
+                    ""
+                ],
+                [
+                    "",
+                    "",
+                    "",
+                    ""
+                ]
+            ]
+        }
+    ]
+}

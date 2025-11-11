@@ -142,14 +142,11 @@ def validate_and_convert(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    ✅ Validate the given template_id and document_id.
-    ✅ Convert PDF → JSON + Markdown.
-    ✅ Save both files in organized folders.
-    ✅ Update file paths in DB and return them.
+    temp id and doc id matum tharuven, rendum okay achuna adha Json and markdown convert pani adhoda path ah matum db la store panuren.
     """
     user = current_user["user"]
 
-    # 1️⃣ Validate template existence
+    #  Validate template existence
     template = db.query(models.Template).filter(
         models.Template.temp_id == template_id,
         models.Template.is_active == True
@@ -157,7 +154,7 @@ def validate_and_convert(
     if not template:
         raise HTTPException(status_code=404, detail=f"Template with id {template_id} not found.")
 
-    # 2️⃣ Validate document existence and belonging
+    #  Validate document existence and belonging
     document = db.query(models.Document).filter(
         models.Document.document_id == document_id,
         models.Document.template_id == template_id,
@@ -166,11 +163,11 @@ def validate_and_convert(
     if not document:
         raise HTTPException(status_code=404, detail=f"Document with id {document_id} not found for this template.")
 
-    # 3️⃣ Check file existence
+    #  Check file existence
     if not os.path.exists(document.file_path):
         raise HTTPException(status_code=404, detail="Original PDF file not found on disk.")
 
-    # 4️⃣ Prepare folder paths
+    #  Prepare folder paths
     ist = pytz.timezone("Asia/Kolkata")
     conversion_time = datetime.now(ist)
     year = conversion_time.strftime("%Y")
@@ -191,7 +188,7 @@ def validate_and_convert(
     md_file_path = os.path.join(markdown_folder, md_file_name)
 
     try:
-        # 5️⃣ Extract PDF → JSON
+        #  Extract PDF → JSON
         parsed_json = extract_text_and_tables_json(document.file_path, json_folder)
         if isinstance(parsed_json, str) and parsed_json.endswith(".json"):  # function already saved file and returned its path
             json_file_path = parsed_json
@@ -201,7 +198,7 @@ def validate_and_convert(
             return json_file_path
 
 
-        # 6️⃣ Extract PDF → Markdown
+        #  Extract PDF → Markdown
         markdown_text = extract_pdf_to_markdown(document.file_path, markdown_folder)
         if isinstance(markdown_text, str) and markdown_text.endswith(".md"):
             # function already saved file and returned its path
@@ -212,13 +209,13 @@ def validate_and_convert(
             return md_file_path
 
 
-        # 7️⃣ Update DB with file paths (not content)
+        #  Update DB with file paths (not content)
         document.parsed_content = json_file_path.replace("\\", "/")
         document.markdown_content = md_file_path.replace("\\", "/")
         db.commit()
         db.refresh(document)
 
-        # 8️⃣ Return success response
+        #  Return success response
         return {
             "status": "success",
             "message": "PDF successfully converted to JSON and Markdown.",
