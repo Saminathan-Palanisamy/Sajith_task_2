@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from core import database, models
 from fastapi.responses import JSONResponse
 
+
 #--JWT Oauth2_scheme router
 oauth2_scheme = HTTPBearer()
 #---------------------------------------------------------------------
@@ -28,7 +29,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # JWT Secret and Algorithm
 SECRET_KEY = "BeingGood"  
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES =  10
+ACCESS_TOKEN_EXPIRE_MINUTES =  30
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Create a JWT token"""

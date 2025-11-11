@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
+import json
 from sqlalchemy.orm import Session
 from core import database, models, schemas
 from core.auth import get_current_user
@@ -8,6 +9,7 @@ from datetime import datetime
 import pytz
 from typing import List
 from utilities.pdf_extractor import extract_text_and_tables_json, extract_pdf_to_markdown  
+from fastapi.responses import JSONResponse
 
 
 router = APIRouter()
@@ -33,7 +35,7 @@ UPLOAD_DIR = "uploads"
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 
 
-@router.post("/upload_pdfs", response_model=schemas.MultipleUploadResponse)
+@router.post("/upload_pdfs")
 def upload_pdfs(
     template_id: int,
     files: List[UploadFile] = File(...),
@@ -42,15 +44,11 @@ def upload_pdfs(
 ):
     """
     Upload multiple PDF files.
-    Validations:
-    - Template must exist and be active
-    - User must have permission
-    - Files must be PDF and <= 15MB
-    - Saves metadata + stores in year/month/template folder
+    
     """
     user = current_user["user"]
 
-    # --- 1️⃣ Validate template existence ---
+    #  Validate template existence
     template = db.query(models.Template).filter(
         models.Template.temp_id == template_id,
         models.Template.is_active == True
@@ -58,45 +56,43 @@ def upload_pdfs(
     if not template:
         raise HTTPException(status_code=404, detail=f"Template with id {template_id} not found.")
 
-    # --- 2️⃣ Validate user permission ---
+    #  Validate user permission
     if user.role.value != "admin" and template.created_by != user.id:
         raise HTTPException(status_code=403, detail="You don't have permission to upload files to this template.")
 
-    # --- 3️⃣ Prepare folder structure ---
+    #  Prepare folder structure
     ist = pytz.timezone("Asia/Kolkata")
     upload_time = datetime.now(ist)
     year = upload_time.strftime("%Y")
     month = upload_time.strftime("%m")
     template_folder = f"template_{template_id}"
-    folder_path = os.path.join(UPLOAD_DIR, year, month, template_folder)
+    folder_path = os.path.join("uploads", year, month, template_folder)
     os.makedirs(folder_path, exist_ok=True)
 
     uploaded_docs = []
 
     try:
-        # --- 4️⃣ Loop through each file with validation ---
+        #  Process each file
         for file in files:
-            # Check file extension
             if not file.filename.lower().endswith(".pdf"):
                 raise HTTPException(status_code=400, detail=f"{file.filename} is not a PDF file.")
 
-            # Check file size (without reading entire file into memory)
             file.file.seek(0, os.SEEK_END)
             size = file.file.tell()
             file.file.seek(0)
-            if size > MAX_FILE_SIZE:
+            if size > 50 * 1024 * 1024:
                 raise HTTPException(status_code=400, detail=f"{file.filename} exceeds 50 MB size limit.")
 
-            # Generate safe filename
-            original_name, ext = os.path.splitext(file.filename)
-            safe_filename = f"{original_name}_{uuid.uuid4().hex[:8]}{ext}".replace(" ", "_")
+            # Generate unique file name
+            base_name, ext = os.path.splitext(file.filename)
+            safe_filename = f"{base_name}_{uuid.uuid4().hex[:8]}{ext}".replace(" ", "_")
             file_path = os.path.join(folder_path, safe_filename)
 
-            # Efficient file save
+            # Save file to disk
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
 
-            # Create new Document record
+            # Add DB record
             new_doc = models.Document(
                 template_id=template_id,
                 user_id=user.id,
@@ -110,27 +106,36 @@ def upload_pdfs(
             db.add(new_doc)
             uploaded_docs.append(new_doc)
 
-        # --- 5️⃣ Commit once for all files ---
         db.commit()
-
-        # Refresh objects for response
         for doc in uploaded_docs:
             db.refresh(doc)
 
-        # --- 6️⃣ Build clean response ---
-        response_docs = [schemas.DocumentResponse.from_orm(doc) for doc in uploaded_docs]
-        return schemas.MultipleUploadResponse(
-            status="success",
-            message=f"{len(response_docs)} PDF file(s) uploaded successfully.",
-            uploaded_files=response_docs
+        #  Build JSON-safe response
+        uploaded_files = [
+            {
+                "document_id": doc.document_id,
+                "template_id": doc.template_id,
+                "file_name": doc.file_name,
+                "file_path": doc.file_path,
+                "uploaded_at": doc.uploaded_at.isoformat() if doc.uploaded_at else None,
+                "is_active": doc.is_active,
+            }
+            for doc in uploaded_docs
+        ]
+
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content={
+                "status": "success",
+                "message": f"{len(uploaded_files)} PDF file(s) uploaded successfully.",
+                "uploaded_files": uploaded_files,
+            }
         )
 
-    except HTTPException:
-        db.rollback()
-        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # validate api for JSON and Markdown conversion
@@ -191,40 +196,96 @@ def validate_and_convert(
         #  Extract PDF → JSON
         parsed_json = extract_text_and_tables_json(document.file_path, json_folder)
         if isinstance(parsed_json, str) and parsed_json.endswith(".json"):  # function already saved file and returned its path
-            json_file_path = parsed_json
-        else: # function returned data, so we write it
-            with open(json_file_path, "w", encoding="utf-8") as jf:
-                json.dump(parsed_json, jf, ensure_ascii=False, indent=4)
-            return json_file_path
+            with open(parsed_json, "r", encoding="utf-8") as jf:
+                parsed_json = json.load(jf)
+        document.parsed_content = json.dumps(parsed_json, ensure_ascii=False, indent=4)
 
 
         #  Extract PDF → Markdown
-        markdown_text = extract_pdf_to_markdown(document.file_path, markdown_folder)
-        if isinstance(markdown_text, str) and markdown_text.endswith(".md"):
-            # function already saved file and returned its path
-            md_file_path = markdown_text
+        markdown_output = extract_pdf_to_markdown(document.file_path, markdown_folder)
+        if isinstance(markdown_output, str) and markdown_output.endswith(".md"):
+            with open(markdown_output, "r", encoding="utf-8") as mf:
+                markdown_text = mf.read()
+
         else:
-            with open(md_file_path, "w", encoding="utf-8") as mf:
-                mf.write(markdown_text) 
-            return md_file_path
+            markdown_text = markdown_output
+        document.markdown_content = markdown_text
 
 
-        #  Update DB with file paths (not content)
-        document.parsed_content = json_file_path.replace("\\", "/")
-        document.markdown_content = md_file_path.replace("\\", "/")
+
         db.commit()
         db.refresh(document)
 
         #  Return success response
-        return {
-            "status": "success",
-            "message": "PDF successfully converted to JSON and Markdown.",
-            "document_id": document_id,
-            "template_id": template_id,
-            "json_path": document.parsed_content,
-            "markdown_path": document.markdown_content
-        }
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "status": "success",
+                "message": "PDF successfully converted to JSON and Markdown.",
+                "document_id": document_id,
+                "template_id": template_id,
+            }
+        )
 
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Conversion failed: {str(e)}")
+    
+# matching these words are present in JSON that is stored in the database
+template_sections = ["scope","purpose","introduction","disciplinary"]
+
+
+@router.post("/matching_words_present")
+def find_matching_words(
+    template_id: int,
+    document_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    user= current_user["user"]
+    #  Validate template existence
+    template = db.query(models.Template).filter(
+        models.Template.temp_id == template_id,
+        models.Template.is_active == True
+    ).first()
+    if not template:
+        raise HTTPException(status_code=404, detail=f"Template with id {template_id} not found.")
+
+    #  Validate document existence and belonging
+    document = db.query(models.Document).filter(
+        models.Document.document_id == document_id,
+        models.Document.template_id == template_id,
+        models.Document.is_active == True
+    ).first()
+    if not document:
+        raise HTTPException(status_code=404, detail=f"Document with id {document_id} not found for this template.")
+    markdown_content= document.markdown_content
+    if not markdown_content:
+        raise HTTPException(status_code=400, detail="No markdown content found for this document.")
+    
+    try:
+        
+        match_results=[]
+        for section in template_sections:
+            found = section.lower() in markdown_content.lower()
+            match_results.append({
+                "section": section,
+                "message": f"'{section}'-Section {'found' if found else 'not found.'}"
+            })
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "status": "success",
+                "message": "Markdown ellathium thediten.",
+                "document_id": document_id,
+                "template_id": template_id,
+                "results": match_results
+            }
+
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+

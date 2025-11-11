@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 router = APIRouter()
 get_db = database.get_db
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 10
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Create User
 @router.post("/register", response_model=schemas.UserOut)
