@@ -100,6 +100,10 @@ class WordsMatcher(Base):
 
     result = Column(JSON, nullable=False)
 
+    count_within_list = Column(Integer, nullable=False, default=0)
+    count_not_found = Column(Integer, nullable=False, default=0)
+    status_of_matching = Column(String, nullable=False, default="Pending")
+
     template = relationship("Template", backref="word_matches")
     document = relationship("Document", backref="word_matches")
     user = relationship("User", backref="word_matches")

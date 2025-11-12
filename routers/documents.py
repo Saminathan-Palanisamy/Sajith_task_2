@@ -6,7 +6,7 @@ from core.auth import get_current_user
 import os, json
 import uuid
 from datetime import datetime
-import pytz
+import pytz, shutil
 from typing import List
 from utilities.pdf_extractor import extract_text_and_tables_json, extract_pdf_to_markdown  
 from fastapi.responses import JSONResponse
@@ -17,21 +17,6 @@ get_db = database.get_db
 
 UPLOAD_DIR = "uploads"
 
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
-from sqlalchemy.orm import Session
-from core import database, models, schemas
-from core.auth import get_current_user
-from datetime import datetime
-import pytz
-import os
-import uuid
-import shutil
-from typing import List
-
-router = APIRouter()
-get_db = database.get_db
-
-UPLOAD_DIR = "uploads"
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 
 
@@ -230,9 +215,9 @@ def validate_and_convert(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Conversion failed: {str(e)}")
-    
+#--------------------------------------------------------------------------------------------------------------    
 # matching these words are present in JSON that is stored in the database
-template_sections = ["scope","purpose","introduction","disciplinary"]
+template_sections = ["scope","purpose"]
 
 
 @router.post("/matching_words_present")
@@ -272,12 +257,21 @@ def find_matching_words(
                 "section": section,
                 "message": f"'{section}'-Section {'found' if found else 'not found.'}"
             })
+
+        total_count = len(template_sections)
+        count_within_list = total_count
+        count_not_found = sum(1 for r in match_results if "not found" in r["message"].lower())
+        status_of_matching = "Success" if count_not_found == 0 else "Re-process"
+
         new_match = models.WordsMatcher(
             temp_id=template_id,
             document_id=document_id,
             user_id=user.id,
             list_to_search=template_sections,
-            result=match_results
+            result=match_results,
+            count_within_list=count_within_list,
+            count_not_found=count_not_found,
+            status_of_matching=status_of_matching            
         )
         db.add(new_match)
         db.commit()
@@ -291,12 +285,16 @@ def find_matching_words(
                 "template_id": template_id,
                 "document_id": document_id,
                 "word_matcher_id": new_match.word_matcher_id,
+                "count_within_list": count_within_list,
+                "count_not_found": count_not_found,
+                "status_of_matching": status_of_matching,
                 "results": match_results
+                
             }
 
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"matching failed: {str(e)}")
 
-
+#--------------------------------------------------------------------------------------------------------------  
 

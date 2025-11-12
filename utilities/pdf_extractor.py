@@ -172,10 +172,7 @@ def extract_text_and_tables_json(pdf_path: str, output_folder: str) -> str:
 def extract_pdf_to_markdown(pdf_path: str, output_folder: str) -> str:
     """
     Extracts a PDF to Markdown with:
-    ✅ Per-page headers
-    ✅ Clean aligned tables
-    ✅ Footer removal (e.g., "Page 1 of 5", "Confidential", etc.)
-    ✅ Handles multi-line table cells
+
     """
     os.makedirs(output_folder, exist_ok=True)
     md_filename = os.path.splitext(os.path.basename(pdf_path))[0] + ".md"
