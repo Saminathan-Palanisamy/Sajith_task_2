@@ -342,8 +342,9 @@ def get_matching_status(
             "results": filtered_results
         }
     )
-
-# Api that shows the "Success", "Re-process" status count and response of entire word_matcher table on onehit.
+#------------------------------------------------------------------------------------------------------------
+# Api that shows the "Success", "Re-process" status count of entire word_matcher table on onehit.
+# based on current user role, if admin- all records count, if user- only his records count.
 @router.get("/overall_matching_status_[DB]")
 def overall_matching_status(
     db: Session = Depends(get_db),
@@ -353,40 +354,33 @@ def overall_matching_status(
     Overall status of word_matcher table- [total count um vandhurum, andha column la irundha. Ilana kanakula edukadhu]
     """
     user = current_user["user"]
+    is_admin = user.role.value == "admin"
+
 
     try:
-        total_records = db.query(models.WordsMatcher).count()
-        success_count = db.query(models.WordsMatcher).filter(models.WordsMatcher.status_of_matching == "Success").count()
-        reprocess_count = db.query(models.WordsMatcher).filter(models.WordsMatcher.status_of_matching == "Re-process").count()
+        if is_admin:
+            base_query = db.query(models.WordsMatcher)
+        else:
+            base_query=db.query(models.WordsMatcher).filter(models.WordsMatcher.user_id==user.id)
 
-        # all_records = db.query(models.WordsMatcher).all()
-        # records_data = []
-        # for record in all_records:
-        #     try:
-        #         result_data = record.result if isinstance(record.result, list) else json.loads(record.result)
-        #     except Exception:
-        #         result_data = []
+        total_records = base_query.count()
+        success_count = base_query.filter(models.WordsMatcher.status_of_matching == "Success").count()
+        reprocess_count = base_query.filter(models.WordsMatcher.status_of_matching == "Re-process").count()
 
-        #     records_data.append({
-        #         "word_matcher_id": record.word_matcher_id,
-        #         "result": result_data,
-        #         "count_within_list": record.count_within_list,
-        #         "count_not_found": record.count_not_found,
-        #         "status_of_matching": record.status_of_matching
-        #     })
-
+ 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
+                "user_role": user.role.value,
+                "user_id": user.id,
                 "total_records": total_records,
                 "success_count": success_count,
                 "reprocess_count": reprocess_count,
-#               "records": records_data
             }
         )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
+#----------------------------------------------------------------------------
 
