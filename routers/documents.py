@@ -272,14 +272,25 @@ def find_matching_words(
                 "section": section,
                 "message": f"'{section}'-Section {'found' if found else 'not found.'}"
             })
+        new_match = models.WordsMatcher(
+            temp_id=template_id,
+            document_id=document_id,
+            user_id=user.id,
+            list_to_search=template_sections,
+            result=match_results
+        )
+        db.add(new_match)
+        db.commit()
+        db.refresh(new_match)
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
                 "status": "success",
                 "message": "Markdown ellathium thediten.",
-                "document_id": document_id,
                 "template_id": template_id,
+                "document_id": document_id,
+                "word_matcher_id": new_match.word_matcher_id,
                 "results": match_results
             }
 

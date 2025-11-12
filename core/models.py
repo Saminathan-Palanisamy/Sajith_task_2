@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum, UniqueConstraint, Boolean, DateTime, text, JSON
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum, UniqueConstraint, Boolean, DateTime, text, JSON, func
 from datetime import datetime
 from core.database import Base
 from sqlalchemy.orm import relationship
@@ -84,3 +84,22 @@ class Document(Base):
 
     user = relationship("User", back_populates="documents")
     template = relationship("Template", back_populates="documents")
+
+
+#creating table for storing the records of hit results on words matcher
+class WordsMatcher(Base):
+    __tablename__ = "words_matcher"
+
+    word_matcher_id = Column(Integer, primary_key=True, index=True)
+    temp_id = Column(Integer, ForeignKey("templates.temp_id"), nullable=False)
+    document_id = Column(Integer, ForeignKey("documents.document_id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    hit_time = Column(DateTime(timezone=True), server_default=func.now())
+
+    list_to_search = Column(JSON, nullable=False)
+
+    result = Column(JSON, nullable=False)
+
+    template = relationship("Template", backref="word_matches")
+    document = relationship("Document", backref="word_matches")
+    user = relationship("User", backref="word_matches")
