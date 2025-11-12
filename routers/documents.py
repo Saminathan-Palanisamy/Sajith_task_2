@@ -298,3 +298,95 @@ def find_matching_words(
 
 #--------------------------------------------------------------------------------------------------------------  
 
+# creating get api for fetching the status from word_matcher table
+@router.get("/matching_status")
+def get_matching_status(
+    word_matcher_id: int,
+    status_filter: str = "both",
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Idhula edhachum kodunga: success, reprocess, both
+    """
+    user = current_user["user"]
+
+    record = db.query(models.WordsMatcher).filter(
+        models.WordsMatcher.word_matcher_id == word_matcher_id
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail=f"Record with id {word_matcher_id} not found.")
+
+    try:
+        result_data = record.result if isinstance(record.result, list) else json.loads(record.result)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error parsing result JSON from database.")
+
+    filtered_results = []
+    status_filter = status_filter.lower()
+
+    if status_filter == "success":
+        filtered_results = [r for r in result_data if "not found" not in r["message"].lower()]
+    elif status_filter in ["reprocess", "re-process"]:
+        filtered_results = [r for r in result_data if "not found" in r["message"].lower()]
+    elif status_filter == "both":
+        filtered_results = result_data
+    else:
+        raise HTTPException(status_code=400, detail="Invalid status_filter. Use 'success', 'reprocess', or 'both'.")
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "word_matcher_id": word_matcher_id,
+            "filter_type": status_filter,
+            "results": filtered_results
+        }
+    )
+
+# Api that shows the "Success", "Re-process" status count and response of entire word_matcher table on onehit.
+@router.get("/overall_matching_status_[DB]")
+def overall_matching_status(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Overall status of word_matcher table- [total count um vandhurum, andha column la irundha. Ilana kanakula edukadhu]
+    """
+    user = current_user["user"]
+
+    try:
+        total_records = db.query(models.WordsMatcher).count()
+        success_count = db.query(models.WordsMatcher).filter(models.WordsMatcher.status_of_matching == "Success").count()
+        reprocess_count = db.query(models.WordsMatcher).filter(models.WordsMatcher.status_of_matching == "Re-process").count()
+
+        # all_records = db.query(models.WordsMatcher).all()
+        # records_data = []
+        # for record in all_records:
+        #     try:
+        #         result_data = record.result if isinstance(record.result, list) else json.loads(record.result)
+        #     except Exception:
+        #         result_data = []
+
+        #     records_data.append({
+        #         "word_matcher_id": record.word_matcher_id,
+        #         "result": result_data,
+        #         "count_within_list": record.count_within_list,
+        #         "count_not_found": record.count_not_found,
+        #         "status_of_matching": record.status_of_matching
+        #     })
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "total_records": total_records,
+                "success_count": success_count,
+                "reprocess_count": reprocess_count,
+#               "records": records_data
+            }
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
