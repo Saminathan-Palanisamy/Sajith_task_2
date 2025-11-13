@@ -10,7 +10,7 @@ import pytz, shutil
 from typing import List
 from utilities.pdf_extractor import extract_text_and_tables_json, extract_pdf_to_markdown  
 from fastapi.responses import JSONResponse
-
+from sqlalchemy import and_
 
 router = APIRouter()
 get_db = database.get_db
@@ -217,7 +217,7 @@ def validate_and_convert(
         raise HTTPException(status_code=500, detail=f"Conversion failed: {str(e)}")
 #--------------------------------------------------------------------------------------------------------------    
 # matching these words are present in JSON that is stored in the database
-template_sections = ["scope","purpose"]
+# template_sections = ["scope","purpose"]
 
 
 @router.post("/matching_words_present")
@@ -249,6 +249,22 @@ def find_matching_words(
         raise HTTPException(status_code=400, detail="No markdown content found for this document.")
     
     try:
+        existing_records = db.query(models.WordsMatcher).filter(
+            models.WordsMatcher.temp_id == template_id,
+            models.WordsMatcher.document_id == document_id,
+            models.WordsMatcher.is_active == True
+        ).all()
+
+        for record in existing_records:
+            record.is_active = False
+        if existing_records:
+            db.commit()  
+
+        sections= db.query(models.Section.section_name).filter(models.Section.template_id == template_id, models.Section.is_active == True).all()
+        if not sections:
+            raise HTTPException(status_code=404, detail="No active sections found for this template, Vera edhachum section irukura mari id podunga.")
+        
+        template_sections = [s[0] for s in sections]
         
         match_results=[]
         for section in template_sections:
@@ -271,7 +287,9 @@ def find_matching_words(
             result=match_results,
             count_within_list=count_within_list,
             count_not_found=count_not_found,
-            status_of_matching=status_of_matching            
+            status_of_matching=status_of_matching, 
+            is_active=True 
+
         )
         db.add(new_match)
         db.commit()
@@ -351,6 +369,7 @@ def overall_matching_status(
     current_user: dict = Depends(get_current_user)
 ):
     """
+    Displays the overall status of the word matcher table.
     Overall status of word_matcher table- [total count um vandhurum, andha column la irundha. Ilana kanakula edukadhu]
     """
     user = current_user["user"]
@@ -380,7 +399,201 @@ def overall_matching_status(
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Count failed: {str(e)}")
 
 #----------------------------------------------------------------------------
 
+
+# API based on role based perspective, admin can see all the documents from all the active and inactive users/templates/documents
+#normal user can see only his documents.
+@router.get("/list_user_details_admin_only")
+def list_user_details_admin_only(
+    db: Session= Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    indha api la verum user details fetch panikulam- admin matum than."""
+    try:
+        user = current_user["user"]
+        is_admin = user.role.value == "admin"
+
+        if is_admin:
+            
+            users = db.query(models.User).all()
+            documents = db.query(models.Document).all()            
+            # templates = db.query(models.Template).all()
+            # sections=db.query(models.Section).all()
+            # authenticators=db.query(models.Authenticator).all()
+            # word_matchers=db.query(models.WordsMatcher).all()
+
+            User_data = [
+                {
+                    "id": u.id,
+                    "username": u.username,
+                    "email": u.email,
+                    "user_role": u.role.value
+
+
+                }
+                for u in users
+            ]
+            """
+            Document_data = [
+                {
+                    "document_id": doc.document_id,
+                    "file_name": doc.file_name,
+                    "is_active": doc.is_active,
+                }
+                for doc in documents
+            ]            
+            
+            Template_data = [
+                {
+                    "temp_id": t.temp_id,
+                    "Temp_name": t.Temp_name,
+                    "Temp_desc": t.Temp_desc,
+                    "created_by": t.created_by,
+                    "is_active": t.is_active,
+                }
+                for t in templates
+            ]
+            Sections_data = [
+                {
+                    "section_id": s.section_id,
+                    "template_id": s.template_id,
+                    "Section_name": s.section_name,
+                    "Section_desc": s.section_desc,
+                    "Section_order" : s.order,
+                    "is_active": s.is_active
+                }
+                for s in sections
+            ]
+            Authenticators_data = [
+                {
+                    "authenticator_id": a.authenticator_id,
+                    "User_id": a.User_id,
+                    "Login timing": a.Login_time.isoformat() if a.Login_time else None,
+                    "is_active": a.is_active
+                }
+                for a in authenticators
+            ]
+                        Word_matcher_data = [
+                {
+                    "word_matcher_id": w.word_matcher_id,
+                    "hit_time" : w.hit_time.isoformat() if w.hit_time else None,
+                    "result": w.result,
+                    "status of matching": w.status_of_matching
+                }
+                for w in word_matchers
+            ]
+            """
+
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={
+                    "message": "Admin fetched all details successfully.",
+                    "user_count" : len(User_data),
+                    # "document_count" : len(Document_data),                    
+                    # "template_count" : len(Template_data),
+                    # "section_count" : len(Sections_data),
+                    # "authenticator_count" : len(Authenticators_data),
+                    # "word_matcher_count" : len(Word_matcher_data),
+                    "data": {
+                        "users": {
+                            
+                            "records": User_data
+                        }
+                        # "documents" : {
+                        #     "count": len(Document_data),
+                        #     "records": Document_data
+                        # }
+                        # "templates" : {
+                        #     "count": len(Template_data),
+                        #     "records": Template_data
+                        # },
+                        # "sections" : {
+                        #     "count": len(Sections_data),
+                        #     "records": Sections_data
+                        # },
+                        # "authenticators" : {
+                        #     "count": len(Authenticators_data),
+                        #     "records": Authenticators_data
+                        # },
+                        # "documents" : {
+                        #     "count": len(Document_data),
+                        #     "records": Document_data
+                        # },
+                        # "word_matchers" : {
+                        #     "count": len(Word_matcher_data),
+                        #     "records": Word_matcher_data
+                        # }
+                        
+                    },
+                },
+
+            ) 
+                  
+
+        else:
+            raise HTTPException(status_code=403, detail="Only admin users can access all documents.")
+
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fetching documents failed, sari senjutu vanga: {str(e)}")
+    
+#----------------------------------------------------------------------------
+
+# API to get document of their's alone along with status of matching of that document. We use foereign key relationship here.
+@router.get("/list_user_documents")
+def list_user_documents(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    admin:all documents details, and also status of matching against the document id.
+    You can see only your documents details alone
+    """
+    try:
+        user = current_user["user"]
+        is_admin = user.role.value == "admin"
+
+
+        base_query = (db.query(models.Document.document_id,models.Document.file_name,models.WordsMatcher.status_of_matching)
+            .join(models.WordsMatcher,
+                  and_(models.WordsMatcher.document_id == models.Document.document_id , models.WordsMatcher.is_active == True)) 
+        )
+
+        if is_admin:
+            documents= base_query.all()
+        else:
+            documents= base_query.filter(models.Document.user_id == user.id).all()
+
+    
+        if not documents:
+            raise HTTPException(status_code=404, detail="No documents found in the database.")
+
+        Document_data=[
+            {
+
+                "document_id": document_id,
+                "file_name": file_name,
+                "status of matching": status if status else "Not processed yet"
+
+            }
+            for document_id, file_name, status in documents
+        ]
+
+
+
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "message": "Documents fetched successfully.",
+                "document_count_according_to the status in words matcher table": len(Document_data),
+                "documents": Document_data
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fetching documents failed: {str(e)}")
+        
