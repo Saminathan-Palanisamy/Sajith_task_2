@@ -72,11 +72,7 @@ def create_template_ui():
         }
 
         try:
-            res = requests.post(
-                f"{BASE_URL}/templates/fill",
-                json=payload,
-                headers=headers
-            )
+            res = requests.post(f"{BASE_URL}/templates/fill",json=payload,headers=headers)
 
             if res.status_code == 201:
                 st.success("Template created successfully!")
@@ -95,7 +91,7 @@ def update_template_ui():
         headers = {"Authorization": f"Bearer {st.session_state.token}"}
 
         # fetch template list
-        st.subheader("🔧 Update Template Details (Admin Only)")
+        st.subheader(" Update Template Details (Admin Only)")
 
         # Input fields
         temp_id = st.number_input("Template ID", min_value=1, step=1)
@@ -114,11 +110,7 @@ def update_template_ui():
 
                 try:
                     # PUT request with query param
-                    res = requests.put(
-                        f"{BASE_URL}/templates/update_template_details?temp_id={temp_id}",
-                        json=payload,
-                        headers=headers
-                    )
+                    res = requests.put(f"{BASE_URL}/templates/update_template_details?temp_id={temp_id}",json=payload,headers=headers)
                     
                     if res.status_code == 200:
                         data = res.json()
@@ -132,7 +124,7 @@ def update_template_ui():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"template error occured for updating: {str(e)}")
 def view_templates_ui():
-    st.header("Update Existing Template")
+    st.header("viewing Existing Template")
     headers = {"Authorization": f"Bearer {st.session_state.token}"}
     try:
         res = requests.get(f"{BASE_URL}/list/list_items?template=true",headers=headers)
@@ -147,6 +139,75 @@ def view_templates_ui():
     except Exception as e:
         st.error(f"Streamlit Error: {e}")
 #-----------------------------------------------------------------------------------------------------------------
+#-------------Section function-------------------------------------------------------------------------
+def create_section_ui():
+
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+
+    st.subheader(" Create Section (Admin Only)")
+
+    section_name = st.text_input("Section Name")
+    section_desc = st.text_area("Section Description")
+    template_id = st.number_input("Template ID", min_value=1, step=1)
+    order = st.number_input("Order", min_value=1, step=1)
+
+    if st.button("Create Section"):
+        if not section_name.strip() or not section_desc.strip():
+            st.warning("Section name and description cannot be empty.")
+        else:
+            payload = {
+                "section_name": section_name,
+                "section_desc": section_desc,
+                "template_id": template_id,
+                "order": order
+            }
+
+            try:
+                res = requests.post(f"{BASE_URL}/sections/fill_the_section",json=payload,headers=headers)
+                if res.status_code == 201:
+                    st.success("Section created successfully!")
+                    st.json(res.json()["data"])
+                elif res.status_code == 400:
+                    st.warning(res.json().get("detail"))
+                else:
+                    st.error(f"Error: {res.text}")
+
+            except Exception as e:
+                st.error(f"Streamlit Error/ Request failed: {e}")
+
+def update_section_ui():
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+    st.subheader("Update_section")
+    section_id = st.number_input("Section ID", min_value=1, step=1)
+    new_name = st.text_input("New Section Name")
+    new_desc = st.text_area("New Section Description")
+    if st.button("Update_Section"):
+
+
+        payload = {
+            "name": new_name,
+            "desc": new_desc
+        }
+
+        try:
+
+            res = requests.put(f"{BASE_URL}/sections/update_section_details?section_id={section_id}",json=payload,headers=headers)
+                    
+            if res.status_code == 200:
+                data = res.json()
+                st.success(data["message"])
+                st.json(data["data"])
+            else:
+                st.error(res.json().get("detail", "Unknown error"))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"error in updatin:{str(e)}")
+
+
+
+
+
+#-----------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------
 
 # Admin dashboard function
 def admin_dashboard():
@@ -156,7 +217,7 @@ def admin_dashboard():
     st.subheader("Admin Menu")
 
     choice = st.selectbox(
-        "Select an action",
+        "Select a template action",
         ["Create Template", "Update Template", "View templates"]
     )
 
@@ -169,6 +230,22 @@ def admin_dashboard():
 
     elif choice == "View templates":
         view_templates_ui()
+    img = Image.open("dodge.jpg")
+    st.image(img, width=1000)
+
+    choice = st.selectbox(
+        "Select a Section action",
+        ["Create Section", "Update Section", "View Section"]
+    )
+    if choice == "Create Section":
+        create_section_ui()
+
+    if choice == "Update Section":
+        update_section_ui()
+
+    if choice == "View Section":
+        st.write("View option inum velai seiyala...")
+
 
 
     if st.button("Logout"):
