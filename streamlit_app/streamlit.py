@@ -18,6 +18,9 @@ if "token" not in st.session_state:
 if "is_logged_in" not in st.session_state:
     st.session_state.is_logged_in = False
 
+if "role" not in st.session_state:
+    st.session_state.role = None
+
 # -----------------Function def----------
 def go_home():
     st.session_state.page = "home"
@@ -46,6 +49,142 @@ def Logout_user():
 
     except Exception as e:
         st.error(f"Logout Error: {e}")
+#-----------------------------------templates-----------------------------------------------------------------------------
+# creating and updating template functions
+def create_template_ui():
+    st.header("Create Template")
+
+    Temp_name = st.text_input("Template Name")
+    Temp_desc = st.text_area("Template Description")
+    created_by = st.text_input("Creator User ID")
+
+    if st.button("Create Template"):
+        if not Temp_name or not created_by:
+            st.error("Template name and creator ID are required")
+            return
+
+        headers = {"Authorization": f"Bearer {st.session_state.token}"}
+
+        payload = {
+            "Temp_name": Temp_name,
+            "Temp_desc": Temp_desc,
+            "created_by": int(created_by)
+        }
+
+        try:
+            res = requests.post(
+                f"{BASE_URL}/templates/fill",
+                json=payload,
+                headers=headers
+            )
+
+            if res.status_code == 201:
+                st.success("Template created successfully!")
+            else:
+                st.error(res.json().get("detail"))
+
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+
+    # update templates
+def update_template_ui():
+    try:
+        st.header("Update Template")
+
+        headers = {"Authorization": f"Bearer {st.session_state.token}"}
+
+        # fetch template list
+        st.subheader("🔧 Update Template Details (Admin Only)")
+
+        # Input fields
+        temp_id = st.number_input("Template ID", min_value=1, step=1)
+        new_name = st.text_input("New Template Name")
+        new_desc = st.text_area("New Template Description")
+
+        # Update Button
+        if st.button("Update Template"):
+            if not new_name.strip() or not new_desc.strip():
+                st.warning("Name and description cannot be empty.")
+            else:
+                payload = {
+                    "name": new_name,
+                    "desc": new_desc
+                }
+
+                try:
+                    # PUT request with query param
+                    res = requests.put(
+                        f"{BASE_URL}/templates/update_template_details?temp_id={temp_id}",
+                        json=payload,
+                        headers=headers
+                    )
+                    
+                    if res.status_code == 200:
+                        data = res.json()
+                        st.success(data["message"])
+                        st.json(data["data"])
+                    else:
+                        st.error(res.json().get("detail", "Unknown error"))
+
+                except Exception as e:
+                    st.error(f"Streamlit Error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"template error occured for updating: {str(e)}")
+def view_templates_ui():
+    st.header("Update Existing Template")
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+    try:
+        res = requests.get(f"{BASE_URL}/list/list_items?template=true",headers=headers)
+        data = res.json()
+
+        if res.status_code == 200:
+            st.success(f"Templates Loaded: {data['count']}")
+            st.table(data["data"])
+        else:
+            st.error(data.get("detail", "Error occurred"))
+
+    except Exception as e:
+        st.error(f"Streamlit Error: {e}")
+#-----------------------------------------------------------------------------------------------------------------
+
+# Admin dashboard function
+def admin_dashboard():
+    st.info("Admin Dashboard")
+    st.success(f"Logged in as ADMIN: {st.session_state.user_email}")
+
+    st.subheader("Admin Menu")
+
+    choice = st.selectbox(
+        "Select an action",
+        ["Create Template", "Update Template", "View templates"]
+    )
+
+    if choice == "Create Template":
+        create_template_ui()
+        
+    
+    elif choice == "Update Template":
+        update_template_ui()
+
+    elif choice == "View templates":
+        view_templates_ui()
+
+
+    if st.button("Logout"):
+        Logout_user()
+
+# user dashboard function
+def user_dashboard():
+    st.title("Welcome to Inmar")
+    st.success(f"Logged in as USER: {st.session_state.user_email}")
+    st.subheader("User Menu")
+    img = Image.open("dodge.jpg")
+    st.image(img, width=1000)
+    if st.button("View templates"):
+        view_templates_ui()
+    if st.button("Logout"):
+        Logout_user()
 #-----------------home set up----------------------
 if st.session_state.page == "home" and not st.session_state.is_logged_in:
     st.title(" INMAR Authentication Portal")
@@ -81,6 +220,7 @@ elif st.session_state.page == "login" and not st.session_state.is_logged_in:
                 st.session_state.token = data["access_token"]
                 st.session_state.user_email = data["email"]
                 st.session_state.is_logged_in = True
+                st.session_state.role = data['role']
                 st.session_state.page = "dashboard"
                 st.rerun()
                 
@@ -89,7 +229,7 @@ elif st.session_state.page == "login" and not st.session_state.is_logged_in:
                 st.error(res.json().get("detail"))
 
         except Exception as e:
-            st.error(f"Error: {e}")
+            raise HTTPException(status_code=500, detail= f"Follow back the Error: str{(e)}")
 
     st.button(" Back", on_click=go_home)
 
@@ -128,19 +268,27 @@ elif st.session_state.page == "register" and not st.session_state.is_logged_in:
 #----------------------------------------------------------------------
 # -----------Login dashboard----------------
 elif st.session_state.is_logged_in:
-    st.title(" Welcome to INMAR Dashboard")
-    st.success(f"Logged in as: {st.session_state.user_email}")
     try:
-        img = Image.open("dodge.jpg")
-        st.image(img, width=1000)
 
-
-
+        if st.session_state.role == "admin":
+            admin_dashboard()
+        else:
+            user_dashboard()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"login error occured:{str(e)}")
+        raise HTTPException(status_code=500, detail=f"dashboard error occured: {str(e)}")
+    # st.title(" Welcome to INMAR Dashboard")
+    # st.success(f"Logged in as: {st.session_state.user_email}")
+    # try:
+    #     img = Image.open("dodge.jpg")
+    #     st.image(img, width=1000)
 
 
-    if st.button("Logout"):    
-        Logout_user()
+
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"login error occured:{str(e)}")
+
+
+    # if st.button("Logout"):    
+    #     Logout_user()
 
 #------------------------------------------

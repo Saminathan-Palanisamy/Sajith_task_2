@@ -80,6 +80,7 @@ def login_user(email: str= Form(), password: str= Form(), db: Session = Depends(
             status_code=status.HTTP_200_OK,
             content={
                 "email": db_user.email,
+                "role": db_user.role.value,
                 "access_token": access_token,
                 "token_type": "bearer",
                 "status": "success",
